@@ -48,6 +48,14 @@ rule RERUN_CMAKE
 
 
 #############################################
+# Rule for cleaning additional files.
+
+rule CLEAN_ADDITIONAL
+  command = /opt/clion-2024.3.4/bin/cmake/linux/x64/bin/cmake -DCONFIG=$CONFIG -P CMakeFiles/clean_additional.cmake
+  description = Cleaning additional files...
+
+
+#############################################
 # Rule for cleaning all built files.
 
 rule CLEAN

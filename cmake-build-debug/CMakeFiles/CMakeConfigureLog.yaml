@@ -496,3 +496,73 @@ events:
       Running the CXX compiler's linker: "/usr/bin/ld" "-v"
       GNU ld (GNU Binutils) 2.44
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/clion-2024.3.4/bin/cmake/linux/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/opt/clion-2024.3.4/bin/cmake/linux/x64/share/cmake-3.30/Modules/CheckCSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/opt/clion-2024.3.4/bin/cmake/linux/x64/share/cmake-3.30/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "/opt/clion-2024.3.4/bin/cmake/linux/x64/share/cmake-3.30/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "/opt/clion-2024.3.4/bin/cmake/linux/x64/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/usr/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:36 (find_dependency)"
+      - "/usr/lib/cmake/Qt6/Qt6Dependencies.cmake:34 (_qt_internal_find_third_party_dependencies)"
+      - "/usr/lib/cmake/Qt6/Qt6Config.cmake:155 (include)"
+      - "CMakeLists.txt:7 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "/home/joan/mySoft/CLion/bindAnalyzer/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ApOi2i"
+      binary: "/home/joan/mySoft/CLion/bindAnalyzer/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ApOi2i"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/usr/lib/cmake/Qt6;/usr/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;/usr/lib/cmake/Qt6/3rdparty/kwin"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: '/home/joan/mySoft/CLion/bindAnalyzer/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ApOi2i'
+        
+        Run Build Command(s): /opt/clion-2024.3.4/bin/ninja/linux/x64/ninja -v cmTC_29ba5
+        [1/2] /usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_29ba5.dir/src.c.o -c /home/joan/mySoft/CLion/bindAnalyzer/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-ApOi2i/src.c
+        [2/2] : && /usr/bin/cc   CMakeFiles/cmTC_29ba5.dir/src.c.o -o cmTC_29ba5   && :
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/clion-2024.3.4/bin/cmake/linux/x64/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/opt/clion-2024.3.4/bin/cmake/linux/x64/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/usr/lib/cmake/Qt6/FindWrapAtomic.cmake:36 (check_cxx_source_compiles)"
+      - "/opt/clion-2024.3.4/bin/cmake/linux/x64/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/usr/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:36 (find_dependency)"
+      - "/usr/lib/cmake/Qt6Core/Qt6CoreDependencies.cmake:35 (_qt_internal_find_third_party_dependencies)"
+      - "/usr/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:55 (include)"
+      - "/usr/lib/cmake/Qt6/Qt6Config.cmake:200 (find_package)"
+      - "CMakeLists.txt:7 (find_package)"
+    checks:
+      - "Performing Test HAVE_STDATOMIC"
+    directories:
+      source: "/home/joan/mySoft/CLion/bindAnalyzer/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-WqTt4F"
+      binary: "/home/joan/mySoft/CLion/bindAnalyzer/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-WqTt4F"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/usr/lib/cmake/Qt6;/usr/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;/usr/lib/cmake/Qt6/3rdparty/kwin"
+    buildResult:
+      variable: "HAVE_STDATOMIC"
+      cached: true
+      stdout: |
+        Change Dir: '/home/joan/mySoft/CLion/bindAnalyzer/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-WqTt4F'
+        
+        Run Build Command(s): /opt/clion-2024.3.4/bin/ninja/linux/x64/ninja -v cmTC_86c07
+        [1/2] /usr/bin/c++ -DHAVE_STDATOMIC  -std=gnu++17 -o CMakeFiles/cmTC_86c07.dir/src.cxx.o -c /home/joan/mySoft/CLion/bindAnalyzer/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-WqTt4F/src.cxx
+        [2/2] : && /usr/bin/c++   CMakeFiles/cmTC_86c07.dir/src.cxx.o -o cmTC_86c07   && :
+        
+      exitCode: 0
+...

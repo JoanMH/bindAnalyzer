@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_bindAnalyzer_FILE /home/joan/mySoft/CLion/bindAnalyzer/build/bindAnalyzer)
+set(__QT_DEPLOY_TARGET_bindAnalyzer_TYPE EXECUTABLE)
