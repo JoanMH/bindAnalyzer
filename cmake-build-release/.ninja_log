@@ -1,0 +1,14 @@
+# ninja log v6
+1	448	1741525997570853893	bindAnalyzer_autogen/timestamp	49317da0361dbbc4
+1	448	1741525997570853893	bindAnalyzer_autogen/mocs_compilation.cpp	49317da0361dbbc4
+1	448	1741525997570853893	/home/joan/mySoft/CLion/bindAnalyzer/cmake-build-release/bindAnalyzer_autogen/timestamp	49317da0361dbbc4
+1	448	1741525997570853893	/home/joan/mySoft/CLion/bindAnalyzer/cmake-build-release/bindAnalyzer_autogen/mocs_compilation.cpp	49317da0361dbbc4
+450	1244	1741525997578284828	CMakeFiles/bindAnalyzer.dir/Bind.cpp.o	6e267f068922b57b
+450	1517	1741525997578573004	CMakeFiles/bindAnalyzer.dir/utils.cpp.o	7dd35ca6ecb84b3b
+450	2063	1741525997578407055	CMakeFiles/bindAnalyzer.dir/BindParser.cpp.o	8eeed4e3ed4017d
+450	3165	1741525997576670280	CMakeFiles/bindAnalyzer.dir/bindAnalyzer_autogen/mocs_compilation.cpp.o	9fe73d7c88055dd
+450	3489	1741525997578044024	CMakeFiles/bindAnalyzer.dir/main.cpp.o	6b375279166c30b4
+452	3776	1741525997578670294	CMakeFiles/bindAnalyzer.dir/BindController.cpp.o	279d21c6af2fac15
+1517	4022	1741525998645677559	CMakeFiles/bindAnalyzer.dir/BindModel.cpp.o	c65a49f2a3a5fe3b
+1244	4075	1741525998370675688	CMakeFiles/bindAnalyzer.dir/MainWindow.cpp.o	d880b4dbe2139852
+4075	4309	1741526001201694903	bindAnalyzer	1a2610246fa48270

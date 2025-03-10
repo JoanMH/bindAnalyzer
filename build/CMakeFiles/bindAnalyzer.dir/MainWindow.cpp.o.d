@@ -379,6 +379,8 @@ CMakeFiles/bindAnalyzer.dir/MainWindow.cpp.o: \
  /home/joan/mySoft/CLion/bindAnalyzer/Bind.h \
  /usr/include/c++/14.2.1/unordered_set \
  /usr/include/c++/14.2.1/bits/unordered_set.h \
+ /usr/include/qt6/QtWidgets/QHeaderView \
+ /usr/include/qt6/QtWidgets/qheaderview.h \
  /usr/include/c++/14.2.1/iostream /usr/include/c++/14.2.1/ostream \
  /usr/include/c++/14.2.1/ios /usr/include/c++/14.2.1/bits/basic_ios.h \
  /usr/include/c++/14.2.1/bits/locale_facets.h \
@@ -389,4 +391,35 @@ CMakeFiles/bindAnalyzer.dir/MainWindow.cpp.o: \
  /usr/include/c++/14.2.1/bits/locale_facets.tcc \
  /usr/include/c++/14.2.1/bits/basic_ios.tcc \
  /usr/include/c++/14.2.1/bits/ostream.tcc /usr/include/c++/14.2.1/istream \
- /usr/include/c++/14.2.1/bits/istream.tcc
+ /usr/include/c++/14.2.1/bits/istream.tcc \
+ /usr/include/qt6/QtGui/QKeyEvent /usr/include/qt6/QtGui/qevent.h \
+ /usr/include/qt6/QtCore/qiodevice.h /usr/include/qt6/QtCore/qurl.h \
+ /usr/include/qt6/QtGui/qeventpoint.h /usr/include/qt6/QtGui/qvector2d.h \
+ /usr/include/qt6/QtGui/qvectornd.h \
+ /usr/include/qt6/QtGui/qpointingdevice.h \
+ /usr/include/qt6/QtGui/qinputdevice.h /usr/include/qt6/QtGui/qscreen.h \
+ /usr/include/qt6/QtCore/QList /usr/include/qt6/QtCore/qlist.h \
+ /usr/include/qt6/QtCore/QObject /usr/include/qt6/QtCore/qobject.h \
+ /usr/include/qt6/QtCore/QRect /usr/include/qt6/QtCore/qrect.h \
+ /usr/include/qt6/QtCore/QSize /usr/include/qt6/QtCore/qsize.h \
+ /usr/include/qt6/QtCore/QSizeF /usr/include/qt6/QtGui/QTransform \
+ /usr/include/qt6/QtGui/qtransform.h \
+ /usr/include/qt6/QtGui/qscreen_platform.h /usr/include/c++/14.2.1/set \
+ /usr/include/c++/14.2.1/bits/stl_set.h \
+ /usr/include/c++/14.2.1/bits/stl_multiset.h \
+ /usr/include/qt6/QtWidgets/QInputDialog \
+ /usr/include/qt6/QtWidgets/qinputdialog.h \
+ /usr/include/qt6/QtWidgets/qlineedit.h \
+ /usr/include/qt6/QtGui/qtextcursor.h \
+ /usr/include/qt6/QtGui/qtextdocument.h \
+ /usr/include/qt6/QtGui/qtextformat.h /usr/include/qt6/QtGui/qpen.h \
+ /usr/include/qt6/QtGui/qtextoption.h \
+ /usr/include/qt6/QtWidgets/qdialog.h \
+ /usr/include/qt6/QtWidgets/QSplitter \
+ /usr/include/qt6/QtWidgets/qsplitter.h \
+ /home/joan/mySoft/CLion/bindAnalyzer/BindController.h \
+ /home/joan/mySoft/CLion/bindAnalyzer/BindParser.h \
+ /usr/include/c++/14.2.1/fstream /usr/include/c++/14.2.1/bits/codecvt.h \
+ /usr/include/c++/14.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
+ /usr/include/c++/14.2.1/x86_64-pc-linux-gnu/bits/c++io.h \
+ /usr/include/c++/14.2.1/bits/fstream.tcc

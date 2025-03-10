@@ -18,6 +18,7 @@ public:
     std::string configLine; // Línea original del archivo de configuration
     int lineNumber;
 
+    Bind() = default;
     Bind(std::vector<std::string> mods, std::string k, std::string act, std::string line,
         int num, std::vector<std::string> tgs);
 

@@ -9,6 +9,13 @@ void BindModel::setBinds(const std::vector<Bind>& newBinds) {
     endResetModel();
 }
 
+Bind BindModel::getBindAt(int row) const {
+    if (row >= 0 && row < binds.size()) {
+        return binds[row];
+    }
+    return Bind({}, "", "", "", 0, {});  // 📌 Retorna un bind vacío si la fila es inválida
+}
+
 int BindModel::rowCount(const QModelIndex& parent) const {
     return static_cast<int>(binds.size());
 }
@@ -42,4 +49,8 @@ QVariant BindModel::headerData(int section, Qt::Orientation orientation, int rol
         }
     }
     return QVariant();
+}
+
+const std::vector<Bind>& BindModel::getBinds() const {
+    return binds;  // 📌 Devolvemos la lista completa de binds
 }

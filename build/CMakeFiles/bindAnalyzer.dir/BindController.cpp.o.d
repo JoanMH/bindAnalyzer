@@ -400,4 +400,6 @@ CMakeFiles/bindAnalyzer.dir/BindController.cpp.o: \
  /home/joan/mySoft/CLion/bindAnalyzer/BindModel.h \
  /usr/include/qt6/QtCore/QAbstractTableModel \
  /usr/include/qt6/QtCore/qabstractitemmodel.h \
- /usr/include/c++/14.2.1/iostream
+ /usr/include/c++/14.2.1/iostream /usr/include/c++/14.2.1/set \
+ /usr/include/c++/14.2.1/bits/stl_set.h \
+ /usr/include/c++/14.2.1/bits/stl_multiset.h

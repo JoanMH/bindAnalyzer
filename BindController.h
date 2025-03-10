@@ -20,6 +20,7 @@ private:
 public:
     explicit BindController(MainWindow* window);
     std::vector<Bind> loadBinds(const std::string& filename);
+    static std::vector<std::pair<QString, bool>> extractTags(const std::vector<Bind>& binds);
 };
 
 #endif //BINDCONTROLLER_H
