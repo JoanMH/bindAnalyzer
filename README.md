@@ -17,13 +17,13 @@ You can configure **TAGS** to filter your binds.
 Add as many lines as you need in the following format:
 
 ```
-\#TAGS: tag1 tag2  
+#TAGS: tag1 tag2  
 bind = ...  
 bind = ...  
 
-\#TAGS: tag3 tag4  
-\#Finish your tags with this:  
-\#TAGS:
+#TAGS: tag3 tag4  
+#Finish your tags with this:  
+#TAGS:
 ```
 
 You only need **one final `#TAGS:` line** in your file.
