@@ -29,9 +29,9 @@ bind = ...
 You only need **one final `#TAGS:` line** in your file.
 ### Filtering commands:
 
-- **E** → Enable all tags
-- **D** → Disable all tags
-- **T + number + Enter** → Toggle the state of the selected tag
+- **Alt + E** → Enable all tags
+- **Alt + D** → Disable all tags
+- **Alt + T + number + Enter** → Toggle the state of the selected tag
 
 Use this software at your own risk.  
 Distributed under the **GPL License**.
