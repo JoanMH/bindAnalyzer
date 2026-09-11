@@ -55,12 +55,20 @@ bindanalyzer --no-live            # solo el fichero, sin hyprctl
 bindanalyzer -c otra.conf --json  # volcado JSON de otro fichero
 ```
 
-Ejemplo para un special workspace en `hyprland.conf`:
+Ejemplo para tenerlo como chuleta en un special workspace de Hyprland.
+`foot -a` fija la clase de la ventana, y la windowrule la manda al workspace
+especial nada más aparecer. El segundo bind relanza la chuleta si la cierras con `q`.
 
 ```
-bind = $mainMod, F12, togglespecialworkspace, binds
-exec-once = [workspace special:binds silent] foot -T bindanalyzer -e bindanalyzer --compact
+exec-once = foot -a bindanalyzer -T bindanalyzer -e bindanalyzer --compact
+windowrule = match:class ^(bindanalyzer)$, workspace special:bindanalyzer silent
+
+bind = $mainMod, U, togglespecialworkspace, bindanalyzer
+bind = $mainMod CTRL, U, exec, foot -a bindanalyzer -T bindanalyzer -e bindanalyzer --compact
 ```
+
+Al recargar la configuración con `hyprctl reload` el `exec-once` no se vuelve a
+ejecutar; lanza el comando una vez a mano o usa el bind de relanzar.
 
 ### Teclas
 
