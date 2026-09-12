@@ -6,13 +6,13 @@ use std::process::Command;
 
 #[derive(Debug, thiserror::Error)]
 pub enum LiveError {
-    #[error("Hyprland no está en ejecución (HYPRLAND_INSTANCE_SIGNATURE no definida)")]
+    #[error("Hyprland is not running (HYPRLAND_INSTANCE_SIGNATURE not set)")]
     NotRunning,
-    #[error("no se pudo ejecutar hyprctl: {0}")]
+    #[error("could not run hyprctl: {0}")]
     Exec(std::io::Error),
-    #[error("hyprctl devolvió un error: {0}")]
+    #[error("hyprctl returned an error: {0}")]
     Failed(String),
-    #[error("JSON de hyprctl no válido: {0}")]
+    #[error("invalid hyprctl JSON: {0}")]
     Json(#[from] serde_json::Error),
 }
 

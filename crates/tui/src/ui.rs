@@ -1,8 +1,9 @@
-//! Dibujo de la interfaz con ratatui.
+//! Dibujo de la interfaz con ratatui. Todos los textos salen de `app.t`.
 
-use crate::app::{App, Focus, View};
+use crate::app::{App, Focus, View, UNTAGGED};
+use crate::i18n::{fill, Texts};
 use bindanalyzer_core::model::{Bind, ModMask, Origin};
-use bindanalyzer_core::query;
+use bindanalyzer_core::query::{self, SearchField};
 use bindanalyzer_core::LiveStatus;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Cell, Clear, List, ListItem, Paragraph, Row, Table, Wrap};
@@ -41,15 +42,42 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         draw_detail(f, app, area);
     }
     if app.help {
-        draw_help(f, area);
+        draw_help(f, app.t, area);
     }
 }
 
-fn mods_label(m: ModMask) -> String {
+fn mods_label(t: &Texts, m: ModMask) -> String {
     if m.is_empty() {
-        "sin modificador".to_string()
+        t.no_modifier.to_string()
     } else {
         m.label()
+    }
+}
+
+fn submap_label(t: &Texts, submap: &str) -> String {
+    if submap.is_empty() {
+        t.global_submap.to_string()
+    } else {
+        submap.to_string()
+    }
+}
+
+fn field_label(t: &Texts, field: SearchField) -> &'static str {
+    match field {
+        SearchField::All => t.field_all,
+        SearchField::App => t.field_app,
+        SearchField::Key => t.field_key,
+    }
+}
+
+fn group_label(t: &Texts, name: &str) -> &'static str {
+    match name {
+        "Letters" => t.group_letters,
+        "Digits" => t.group_digits,
+        "Function" => t.group_function,
+        "Navigation" => t.group_navigation,
+        "Special" => t.group_special,
+        _ => t.group_symbols,
     }
 }
 
@@ -62,6 +90,7 @@ fn border_style(focused: bool) -> Style {
 }
 
 fn draw_header(f: &mut Frame, app: &App, area: Rect) {
+    let t = app.t;
     let file = app
         .snap
         .config_path
@@ -71,38 +100,36 @@ fn draw_header(f: &mut Frame, app: &App, area: Rect) {
     let mut spans = vec![
         Span::styled(" bindanalyzer ", Style::new().bold().reversed()),
         Span::styled(
-            format!(" {} ", app.view.title()),
+            format!(" {} ", app.view.title(t)),
             Style::new().fg(ACCENT).bold(),
         ),
-        Span::raw(format!(" {file}  {} binds", app.snap.binds.len())),
+        Span::raw(fill(t.header_binds, &[&file, &app.snap.binds.len()])),
     ];
     let not_loaded = app.snap.not_loaded_count();
     if not_loaded > 0 {
         spans.push(Span::styled(
-            format!("  {not_loaded} sin cargar"),
+            fill(t.header_not_loaded, &[&not_loaded]),
             Style::new().fg(Color::Yellow),
         ));
     }
     let live_only = app.snap.live_only_count();
     if live_only > 0 {
         spans.push(Span::styled(
-            format!("  {live_only} solo en hyprctl"),
+            fill(t.header_live_only, &[&live_only]),
             Style::new().fg(Color::DarkGray),
         ));
     }
     if !app.snap.warnings.is_empty() {
         spans.push(Span::styled(
-            format!("  {} avisos", app.snap.warnings.len()),
+            fill(t.header_warnings, &[&app.snap.warnings.len()]),
             Style::new().fg(Color::Yellow),
         ));
     }
     spans.push(match &app.snap.live {
-        LiveStatus::Ok => Span::styled("  hyprctl ✓", Style::new().fg(Color::Green)),
-        LiveStatus::Disabled => Span::styled("  sin hyprctl", Style::new().fg(Color::DarkGray)),
-        LiveStatus::NotRunning => {
-            Span::styled("  Hyprland no activo", Style::new().fg(Color::Yellow))
-        }
-        LiveStatus::Error(_) => Span::styled("  hyprctl error", Style::new().fg(Color::Red)),
+        LiveStatus::Ok => Span::styled(t.live_ok, Style::new().fg(Color::Green)),
+        LiveStatus::Disabled => Span::styled(t.live_disabled, Style::new().fg(Color::DarkGray)),
+        LiveStatus::NotRunning => Span::styled(t.live_not_running, Style::new().fg(Color::Yellow)),
+        LiveStatus::Error(_) => Span::styled(t.live_error, Style::new().fg(Color::Red)),
     });
     if !app.status.is_empty() {
         spans.push(Span::styled(
@@ -122,6 +149,7 @@ fn origin_style(b: &Bind, live_ok: bool) -> Style {
 }
 
 fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
+    let t = app.t;
     let binds = &app.snap.binds;
     let rows_idx = &app.rows;
     let live_ok = app.snap.live == LiveStatus::Ok;
@@ -147,26 +175,26 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
         header.push(Cell::from("#"));
         widths.push(Constraint::Length(3));
     }
-    header.push(Cell::from("Mods"));
+    header.push(Cell::from(t.col_mods));
     widths.push(Constraint::Length(width(&|b| b.mods.label(), 4, 24)));
-    header.push(Cell::from("Tecla"));
+    header.push(Cell::from(t.col_key));
     widths.push(Constraint::Length(width(&|b| b.key.display(), 5, 20)));
     if show_submap {
-        header.push(Cell::from("Submap"));
+        header.push(Cell::from(t.col_submap));
         widths.push(Constraint::Length(width(&|b| b.submap.clone(), 6, 12)));
     }
-    header.push(Cell::from("Acción"));
+    header.push(Cell::from(t.col_action));
     widths.push(Constraint::Min(20));
     if show_desc {
-        header.push(Cell::from("Descripción"));
+        header.push(Cell::from(t.col_description));
         widths.push(Constraint::Length(width(&|b| b.description.clone(), 11, 30)));
     }
     if show_tags {
-        header.push(Cell::from("Tags"));
+        header.push(Cell::from(t.col_tags));
         widths.push(Constraint::Length(width(&|b| b.tags.join(" "), 4, 24)));
     }
     if show_src {
-        header.push(Cell::from("Origen"));
+        header.push(Cell::from(t.col_source));
         widths.push(Constraint::Length(width(&|b| b.location(), 6, 28)));
     }
 
@@ -199,19 +227,14 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
         })
         .collect();
 
+    let view_title = app.view.title(t);
     let title = match app.view {
-        View::Search => format!(
-            " {} · {} resultados · campo: {} ",
-            app.view.title(),
-            rows_idx.len(),
-            app.field.label()
+        View::Search => fill(
+            t.title_search,
+            &[&view_title, &rows_idx.len(), &field_label(t, app.field)],
         ),
-        View::Conflicts => format!(
-            " {} · {} combinaciones repetidas ",
-            app.view.title(),
-            app.conflicts.len()
-        ),
-        _ => format!(" {} · {} de {} ", app.view.title(), rows_idx.len(), binds.len()),
+        View::Conflicts => fill(t.title_conflicts, &[&view_title, &app.conflicts.len()]),
+        _ => fill(t.title_table, &[&view_title, &rows_idx.len(), &binds.len()]),
     };
 
     let table = Table::new(rows, widths)
@@ -228,10 +251,10 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
 
     if rows_idx.is_empty() {
         let msg = match app.view {
-            View::Search if app.query.trim().is_empty() => "Escribe para buscar",
-            View::Search => "Sin resultados",
-            View::Conflicts => "Sin combinaciones repetidas",
-            _ => "Ningún bind visible con los tags activos",
+            View::Search if app.query.trim().is_empty() => t.empty_type_to_search,
+            View::Search => t.empty_no_results,
+            View::Conflicts => t.empty_no_conflicts,
+            _ => t.empty_no_visible,
         };
         let inner = Rect {
             x: area.x + 2,
@@ -247,19 +270,25 @@ fn draw_table(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn draw_tags(f: &mut Frame, app: &mut App, area: Rect) {
+    let t = app.t;
     let focused = app.focus == Focus::Tags;
     let items: Vec<ListItem> = app
         .tags
         .iter()
-        .map(|t| {
-            let (mark, color) = if t.active {
+        .map(|tag| {
+            let (mark, color) = if tag.active {
                 ("●", Color::Green)
             } else {
                 ("○", Color::Red)
             };
+            let name = if tag.name == UNTAGGED {
+                t.untagged.to_string()
+            } else {
+                tag.name.clone()
+            };
             ListItem::new(Line::from(vec![
                 Span::styled(format!(" {mark} "), Style::new().fg(color)),
-                Span::raw(t.name.clone()),
+                Span::raw(name),
             ]))
         })
         .collect();
@@ -267,7 +296,7 @@ fn draw_tags(f: &mut Frame, app: &mut App, area: Rect) {
     let list = List::new(items)
         .block(
             Block::bordered()
-                .title(format!(" Tags {}/{} [t] ", active, app.tags.len()))
+                .title(fill(t.tags_title, &[&active, &app.tags.len()]))
                 .border_style(border_style(focused)),
         )
         .highlight_style(if focused {
@@ -279,14 +308,18 @@ fn draw_tags(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_stateful_widget(list, area, &mut app.tag_list);
 }
 
+fn bind_line(prefix: String, b: &Bind) -> Line<'static> {
+    Line::from(vec![
+        Span::styled(prefix, Style::new().fg(Color::Magenta)),
+        Span::raw(b.action()),
+        Span::styled(format!("  {}", b.location()), Style::new().fg(Color::DarkGray)),
+    ])
+}
+
 fn draw_free_keys(f: &mut Frame, app: &App, area: Rect) {
+    let t = app.t;
     let binds = &app.snap.binds;
     let submap = app.submap().to_string();
-    let submap_label = if submap.is_empty() {
-        "global".to_string()
-    } else {
-        submap.clone()
-    };
     let mods = app.current_combo();
     let report = query::free_keys(binds, mods, &submap);
     let total: usize = report.iter().map(|g| g.keys.len()).sum();
@@ -294,10 +327,13 @@ fn draw_free_keys(f: &mut Frame, app: &App, area: Rect) {
 
     let mut lines: Vec<Line> = vec![
         Line::from(vec![
-            Span::raw(" Submap: "),
-            Span::styled(submap_label, Style::new().fg(ACCENT).bold()),
-            Span::raw("   Modificadores: "),
-            Span::styled(format!(" ◀ {} ▶ ", mods_label(mods)), Style::new().bold().reversed()),
+            Span::raw(t.free_submap),
+            Span::styled(submap_label(t, &submap), Style::new().fg(ACCENT).bold()),
+            Span::raw(t.free_modifiers),
+            Span::styled(
+                format!(" ◀ {} ▶ ", mods_label(t, mods)),
+                Style::new().bold().reversed(),
+            ),
             Span::styled(
                 format!("  {}/{}", app.combo_idx + 1, app.combos.len()),
                 Style::new().fg(Color::DarkGray),
@@ -306,7 +342,10 @@ fn draw_free_keys(f: &mut Frame, app: &App, area: Rect) {
         Line::raw(""),
     ];
     for g in &report {
-        let mut spans = vec![Span::styled(format!(" {:<11}", g.name), Style::new().bold())];
+        let mut spans = vec![Span::styled(
+            format!(" {:<11}", group_label(t, g.name)),
+            Style::new().bold(),
+        )];
         for k in &g.keys {
             let style = match k.bound_by {
                 None => Style::new().fg(Color::Green),
@@ -319,46 +358,34 @@ fn draw_free_keys(f: &mut Frame, app: &App, area: Rect) {
     lines.push(Line::raw(""));
     lines.push(Line::from(vec![
         Span::raw(" "),
-        Span::styled("verde", Style::new().fg(Color::Green)),
-        Span::raw(" libre · "),
-        Span::styled("gris tachado", Style::new().fg(Color::DarkGray).crossed_out()),
-        Span::raw(" ocupada"),
+        Span::styled(t.legend_green, Style::new().fg(Color::Green)),
+        Span::raw(t.legend_free),
+        Span::styled(t.legend_gray, Style::new().fg(Color::DarkGray).crossed_out()),
+        Span::raw(t.legend_used),
     ]));
     lines.push(Line::raw(""));
-    lines.push(Line::styled(
-        " Ocupadas con esta combinación:",
-        Style::new().bold(),
-    ));
+    lines.push(Line::styled(t.free_used_with_combo, Style::new().bold()));
     for g in &report {
         for k in &g.keys {
             if let Some(i) = k.bound_by {
-                let b = &binds[i];
-                lines.push(Line::from(vec![
-                    Span::styled(format!("   {:<12}", k.key), Style::new().fg(Color::Magenta)),
-                    Span::raw(b.action()),
-                    Span::styled(format!("  {}", b.location()), Style::new().fg(Color::DarkGray)),
-                ]));
+                lines.push(bind_line(format!("   {:<12}", k.key), &binds[i]));
             }
         }
     }
     let others = query::other_bound(binds, mods, &submap);
     if !others.is_empty() {
         lines.push(Line::raw(""));
-        lines.push(Line::styled(" Otras teclas ocupadas:", Style::new().bold()));
+        lines.push(Line::styled(t.free_other_keys, Style::new().bold()));
         for i in others {
             let b = &binds[i];
-            lines.push(Line::from(vec![
-                Span::styled(format!("   {:<12}", b.key.display()), Style::new().fg(Color::Magenta)),
-                Span::raw(b.action()),
-                Span::styled(format!("  {}", b.location()), Style::new().fg(Color::DarkGray)),
-            ]));
+            lines.push(bind_line(format!("   {:<12}", b.key.display()), b));
         }
     }
 
     let p = Paragraph::new(Text::from(lines))
         .block(
             Block::bordered()
-                .title(format!(" Teclas libres · {free} libres de {total} "))
+                .title(fill(t.free_title, &[&free, &total]))
                 .border_style(border_style(app.focus == Focus::Main)),
         )
         .wrap(Wrap { trim: false })
@@ -367,52 +394,45 @@ fn draw_free_keys(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn draw_free_combos(f: &mut Frame, app: &App, area: Rect) {
+    let t = app.t;
     let binds = &app.snap.binds;
     let submap = app.submap().to_string();
-    let submap_label = if submap.is_empty() {
-        "global".to_string()
-    } else {
-        submap.clone()
-    };
     let key = app.letter.trim().to_string();
     let editing = app.focus == Focus::Input;
 
     let mut lines: Vec<Line> = vec![
         Line::from(vec![
-            Span::raw(" Tecla: "),
+            Span::raw(t.combos_key),
             Span::styled(
                 format!(" {}{} ", key, if editing { "▏" } else { "" }),
                 Style::new().bold().reversed(),
             ),
-            Span::raw("   Submap: "),
-            Span::styled(submap_label, Style::new().fg(ACCENT).bold()),
+            Span::raw(t.free_submap),
+            Span::styled(submap_label(t, &submap), Style::new().fg(ACCENT).bold()),
         ]),
         Line::raw(""),
     ];
 
     let mut free = 0;
     if key.is_empty() {
-        lines.push(Line::styled(
-            " Escribe una tecla (q, F5, Return, space, mouse:272...) y pulsa Enter.",
-            Style::new().fg(Color::DarkGray),
-        ));
+        lines.push(Line::styled(t.combos_prompt, Style::new().fg(Color::DarkGray)));
     } else {
         let usage = query::free_combos(binds, &key, &submap, &app.combos);
         for u in usage {
-            let label = format!("   {:<22}", mods_label(u.mods));
+            let label = format!("   {:<22}", mods_label(t, u.mods));
             match u.bound_by {
                 None => {
                     free += 1;
                     lines.push(Line::from(vec![
                         Span::styled(label, Style::new().fg(Color::Blue)),
-                        Span::styled("libre", Style::new().fg(Color::Green).bold()),
+                        Span::styled(t.combos_free, Style::new().fg(Color::Green).bold()),
                     ]));
                 }
                 Some(i) => {
                     let b = &binds[i];
                     lines.push(Line::from(vec![
                         Span::styled(label, Style::new().fg(Color::Blue)),
-                        Span::styled("ocupada  ", Style::new().fg(Color::Red)),
+                        Span::styled(t.combos_used, Style::new().fg(Color::Red)),
                         Span::raw(b.action()),
                         Span::styled(
                             format!("  {}", b.location()),
@@ -423,16 +443,13 @@ fn draw_free_combos(f: &mut Frame, app: &App, area: Rect) {
             }
         }
         lines.push(Line::raw(""));
-        lines.push(Line::styled(
-            " Se listan las combinaciones ya usadas en este submap y las estándar alrededor de SUPER.",
-            Style::new().fg(Color::DarkGray),
-        ));
+        lines.push(Line::styled(t.combos_note, Style::new().fg(Color::DarkGray)));
     }
 
     let title = if key.is_empty() {
-        " Combos libres ".to_string()
+        t.combos_title.to_string()
     } else {
-        format!(" Combos libres para {key} · {free} libres de {} ", app.combos.len())
+        fill(t.combos_title_key, &[&key, &free, &app.combos.len()])
     };
     let p = Paragraph::new(Text::from(lines))
         .block(
@@ -446,44 +463,35 @@ fn draw_free_combos(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
+    let t = app.t;
     let line = match (app.focus, app.view) {
         (Focus::Input, View::FreeCombos) => Line::from(vec![
-            Span::styled(" Tecla: ", Style::new().bold()),
+            Span::styled(t.input_key_label, Style::new().bold()),
             Span::raw(app.letter.clone()),
             Span::styled("▏", Style::new().fg(ACCENT)),
-            Span::styled("   Enter listo · Esc cancelar", Style::new().fg(Color::DarkGray)),
+            Span::styled(t.input_key_hint, Style::new().fg(Color::DarkGray)),
         ]),
         (Focus::Input, _) => Line::from(vec![
             Span::styled(" / ", Style::new().bold()),
             Span::raw(app.query.clone()),
             Span::styled("▏", Style::new().fg(ACCENT)),
             Span::styled(
-                format!(
-                    "   Tab campo: {}  · Enter listo · Esc salir · Ctrl-u borrar",
-                    app.field.label()
-                ),
+                fill(t.input_search_hint, &[&field_label(t, app.field)]),
                 Style::new().fg(Color::DarkGray),
             ),
         ]),
-        (Focus::Tags, _) => hint(" j/k mover · espacio alternar · a todos · n ninguno · o solo este · Esc volver"),
-        (Focus::Main, View::Cheatsheet) => hint(
-            " / buscar · f teclas libres · l combos de una tecla · c conflictos · t tags · m compacto · Enter detalle · r recargar · ? ayuda · q salir",
-        ),
-        (Focus::Main, View::Search) => hint(&format!(
-            " i editar · Tab campo ({}) · Enter detalle · Esc chuleta · q salir",
-            app.field.label()
-        )),
-        (Focus::Main, View::FreeKeys) => {
-            hint(" ←/→ o n/p cambiar combinación · s submap · j/k desplazar · l combos de una tecla · Esc chuleta")
-        }
-        (Focus::Main, View::FreeCombos) => hint(" l otra tecla · s submap · Esc chuleta · q salir"),
-        (Focus::Main, View::Conflicts) => hint(" Enter detalle · Esc chuleta · q salir"),
+        (Focus::Tags, _) => hint(t.hint_tags.to_string()),
+        (Focus::Main, View::Cheatsheet) => hint(t.hint_cheatsheet.to_string()),
+        (Focus::Main, View::Search) => hint(fill(t.hint_search, &[&field_label(t, app.field)])),
+        (Focus::Main, View::FreeKeys) => hint(t.hint_free_keys.to_string()),
+        (Focus::Main, View::FreeCombos) => hint(t.hint_free_combos.to_string()),
+        (Focus::Main, View::Conflicts) => hint(t.hint_conflicts.to_string()),
     };
     f.render_widget(Paragraph::new(line), area);
 }
 
-fn hint(s: &str) -> Line<'static> {
-    Line::styled(s.to_string(), Style::new().fg(Color::DarkGray))
+fn hint(s: String) -> Line<'static> {
+    Line::styled(s, Style::new().fg(Color::DarkGray))
 }
 
 fn centered(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
@@ -509,41 +517,35 @@ fn field(name: &str, value: String) -> Line<'static> {
 }
 
 fn draw_detail(f: &mut Frame, app: &App, area: Rect) {
+    let t = app.t;
     let Some(b) = app.current() else {
         return;
     };
     let live_ok = app.snap.live == LiveStatus::Ok;
     let state = match (b.origin, live_ok) {
-        (Origin::Both, _) => "cargado en Hyprland".to_string(),
-        (Origin::Config, true) => "en el fichero pero NO cargado (¿falta hyprctl reload?)".to_string(),
-        (Origin::Config, false) => "en el fichero".to_string(),
-        (Origin::Live, _) => "cargado pero no está en el fichero".to_string(),
+        (Origin::Both, _) => t.state_loaded,
+        (Origin::Config, true) => t.state_not_loaded,
+        (Origin::Config, false) => t.state_in_file,
+        (Origin::Live, _) => t.state_live_only,
     };
-    let mut flags = b.flags.describe().join(", ");
-    if flags.is_empty() {
-        flags = "ninguno".to_string();
+    let names = b.flags.describe().join(", ");
+    let flags = if names.is_empty() {
+        t.flags_none.to_string()
     } else {
-        flags = format!("{} ({})", b.flags.letters(), flags);
-    }
+        format!("{} ({})", b.flags.letters(), names)
+    };
     let mut lines = vec![
-        field("Combinación", b.combo()),
-        field(
-            "Submap",
-            if b.submap.is_empty() {
-                "global".to_string()
-            } else {
-                b.submap.clone()
-            },
-        ),
-        field("Dispatcher", b.dispatcher.clone()),
-        field("Argumento", b.arg.clone()),
-        field("Flags", flags),
-        field("Descripción", b.description.clone()),
-        field("Tags", b.tags.join(" ")),
-        field("Estado", state),
+        field(t.detail_combo, b.combo()),
+        field(t.detail_submap, submap_label(t, &b.submap)),
+        field(t.detail_dispatcher, b.dispatcher.clone()),
+        field(t.detail_arg, b.arg.clone()),
+        field(t.detail_flags, flags),
+        field(t.detail_description, b.description.clone()),
+        field(t.detail_tags, b.tags.join(" ")),
+        field(t.detail_state, state.to_string()),
     ];
     if let Some(s) = &b.source {
-        lines.push(field("Fichero", format!("{}:{}", s.file.display(), s.line)));
+        lines.push(field(t.detail_file, format!("{}:{}", s.file.display(), s.line)));
         lines.push(Line::raw(""));
         lines.push(Line::styled(s.raw.clone(), Style::new().fg(Color::DarkGray)));
     }
@@ -553,7 +555,7 @@ fn draw_detail(f: &mut Frame, app: &App, area: Rect) {
         Paragraph::new(Text::from(lines))
             .block(
                 Block::bordered()
-                    .title(" Detalle · Esc cierra ")
+                    .title(t.detail_title)
                     .border_style(Style::new().fg(ACCENT)),
             )
             .wrap(Wrap { trim: false }),
@@ -561,27 +563,9 @@ fn draw_detail(f: &mut Frame, app: &App, area: Rect) {
     );
 }
 
-fn draw_help(f: &mut Frame, area: Rect) {
-    let rows = [
-        ("/", "buscar (Tab cambia el campo: todo, aplicación, tecla)"),
-        ("f", "teclas libres para una combinación de modificadores (←/→ o n/p cambia)"),
-        ("l", "combinaciones libres para una tecla"),
-        ("c", "combinaciones repetidas"),
-        ("1 / Esc", "volver a la chuleta"),
-        ("t / Tab", "ir al panel de tags (espacio alterna, a todos, n ninguno, o solo)"),
-        ("T", "mostrar u ocultar el panel de tags"),
-        ("m", "modo compacto (menos columnas)"),
-        ("j/k ↑/↓", "moverse · g/G inicio/fin · PgUp/PgDn saltos"),
-        ("Enter", "detalle del bind seleccionado"),
-        ("r", "recargar (también automático al cambiar el fichero)"),
-        ("q", "salir"),
-        ("", ""),
-        ("amarillo", "bind en el fichero que Hyprland no tiene cargado"),
-        ("gris", "bind cargado que no está en el fichero"),
-        ("", ""),
-        ("Búsqueda por tecla", "escribe la combinación: super shift t · super+t · f5"),
-    ];
-    let lines: Vec<Line> = rows
+fn draw_help(f: &mut Frame, t: &Texts, area: Rect) {
+    let lines: Vec<Line> = t
+        .help_rows
         .iter()
         .map(|(k, d)| {
             Line::from(vec![
@@ -596,7 +580,7 @@ fn draw_help(f: &mut Frame, area: Rect) {
         Paragraph::new(Text::from(lines))
             .block(
                 Block::bordered()
-                    .title(" Ayuda · cualquier tecla cierra ")
+                    .title(t.help_title)
                     .border_style(Style::new().fg(ACCENT)),
             )
             .wrap(Wrap { trim: false }),
@@ -608,6 +592,7 @@ fn draw_help(f: &mut Frame, area: Rect) {
 mod tests {
     use super::*;
     use crate::app::View;
+    use crate::i18n::Lang;
     use bindanalyzer_core::config::parse_str;
     use bindanalyzer_core::snapshot::build;
     use bindanalyzer_core::LoadOptions;
@@ -616,13 +601,19 @@ mod tests {
     use ratatui::Terminal;
     use std::path::Path;
 
-    fn app() -> App {
+    fn app(lang: Lang) -> App {
         let parsed = parse_str(
             "#TAGS: apps\nbind = SUPER, T, exec, kitty\nbind = SUPER SHIFT, T, exec, ghostty\n#TAGS:\nbind = SUPER, Q, killactive,\nbind = SUPER, Q, exec, dup\n",
             Path::new("hyprland.conf"),
         );
         let snap = build(Path::new("hyprland.conf"), parsed, None);
-        App::new(LoadOptions { config: "hyprland.conf".into(), use_live: false }, snap, false, View::Cheatsheet)
+        App::new(
+            LoadOptions { config: "hyprland.conf".into(), use_live: false },
+            snap,
+            false,
+            View::Cheatsheet,
+            lang,
+        )
     }
 
     fn render(app: &mut App) -> String {
@@ -643,47 +634,59 @@ mod tests {
         out
     }
 
-    #[test]
-    fn renders_every_view_without_panicking() {
-        let mut app = app();
-        let s = render(&mut app);
-        assert!(s.contains("Chuleta"), "{s}");
-        assert!(s.contains("kitty"));
-        assert!(s.contains("(sin tag)"));
-
-        app.handle_key(KeyEvent::from(KeyCode::Char('/')));
-        for c in "ghost".chars() {
+    fn keys(app: &mut App, s: &str) {
+        for c in s.chars() {
             app.handle_key(KeyEvent::from(KeyCode::Char(c)));
         }
+    }
+
+    #[test]
+    fn renders_every_view_without_panicking() {
+        let mut app = app(Lang::En);
+        let s = render(&mut app);
+        assert!(s.contains("Cheatsheet"), "{s}");
+        assert!(s.contains("kitty"));
+        assert!(s.contains("(untagged)"));
+
+        keys(&mut app, "/ghost");
         let s = render(&mut app);
         assert!(s.contains("ghostty"));
         assert!(!s.contains("kitty"), "{s}");
 
         app.handle_key(KeyEvent::from(KeyCode::Esc));
-        app.handle_key(KeyEvent::from(KeyCode::Char('f')));
+        keys(&mut app, "f");
         let s = render(&mut app);
-        assert!(s.contains("Teclas libres"));
+        assert!(s.contains("Free keys"));
 
-        app.handle_key(KeyEvent::from(KeyCode::Char('l')));
-        for c in "t".chars() {
-            app.handle_key(KeyEvent::from(KeyCode::Char(c)));
-        }
+        keys(&mut app, "lt");
         app.handle_key(KeyEvent::from(KeyCode::Enter));
         let s = render(&mut app);
-        assert!(s.contains("ocupada"), "{s}");
-        assert!(s.contains("libre"));
+        assert!(s.contains("used"), "{s}");
+        assert!(s.contains("free"));
 
-        app.handle_key(KeyEvent::from(KeyCode::Char('c')));
+        keys(&mut app, "c");
         let s = render(&mut app);
-        assert!(s.contains("1 combinaciones repetidas"), "{s}");
+        assert!(s.contains("1 repeated combos"), "{s}");
 
         app.handle_key(KeyEvent::from(KeyCode::Enter));
         let s = render(&mut app);
-        assert!(s.contains("Detalle"));
+        assert!(s.contains("Detail"));
         app.handle_key(KeyEvent::from(KeyCode::Esc));
-        app.handle_key(KeyEvent::from(KeyCode::Char('?')));
+        keys(&mut app, "?");
         let s = render(&mut app);
-        assert!(s.contains("Ayuda"));
+        assert!(s.contains("Help"));
+    }
+
+    #[test]
+    fn spanish_texts_are_used_when_selected() {
+        let mut app = app(Lang::Es);
+        let s = render(&mut app);
+        assert!(s.contains("Chuleta"), "{s}");
+        assert!(s.contains("(sin tag)"));
+        assert!(s.contains("Acción"));
+        keys(&mut app, "c");
+        let s = render(&mut app);
+        assert!(s.contains("combinaciones repetidas"), "{s}");
     }
 
     /// Herramienta de desarrollo: imprime las vistas con una config real.
@@ -697,42 +700,37 @@ mod tests {
         };
         let opts = LoadOptions { config: path.into(), use_live: true };
         let snap = bindanalyzer_core::load(&opts).unwrap();
-        let mut app = App::new(opts, snap, false, View::Cheatsheet);
+        let mut app = App::new(opts, snap, false, View::Cheatsheet, Lang::from_env());
         fn show(app: &mut App, title: &str) {
             println!("=== {title}");
             print!("{}", render_size(app, 150, 38));
         }
-        fn keys(app: &mut App, s: &str) {
-            for c in s.chars() {
-                app.handle_key(KeyEvent::from(KeyCode::Char(c)));
-            }
-        }
-        show(&mut app, "chuleta");
+        show(&mut app, "cheatsheet");
         keys(&mut app, "c");
-        show(&mut app, "conflictos");
+        show(&mut app, "conflicts");
         keys(&mut app, "f");
-        show(&mut app, "teclas libres");
+        show(&mut app, "free keys");
         app.handle_key(KeyEvent::from(KeyCode::Right));
-        show(&mut app, "teclas libres, siguiente combo");
+        show(&mut app, "free keys, next combo");
         keys(&mut app, "lt");
         app.handle_key(KeyEvent::from(KeyCode::Enter));
-        show(&mut app, "combos libres para t");
+        show(&mut app, "free combos for t");
         keys(&mut app, "/fire");
-        show(&mut app, "buscar fire");
+        show(&mut app, "search fire");
         app.handle_key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
         app.handle_key(KeyEvent::from(KeyCode::Tab));
         app.handle_key(KeyEvent::from(KeyCode::Tab));
         keys(&mut app, "super shift t");
-        show(&mut app, "buscar por tecla");
+        show(&mut app, "key search");
         app.handle_key(KeyEvent::from(KeyCode::Esc));
         keys(&mut app, "m");
         app.handle_key(KeyEvent::from(KeyCode::Enter));
-        show(&mut app, "detalle");
+        show(&mut app, "detail");
     }
 
     #[test]
     fn tags_panel_filters_rows() {
-        let mut app = app();
+        let mut app = app(Lang::En);
         assert_eq!(app.rows.len(), 4);
         app.handle_key(KeyEvent::from(KeyCode::Char('t')));
         app.handle_key(KeyEvent::from(KeyCode::Char(' ')));

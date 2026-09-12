@@ -1,5 +1,6 @@
 //! Estado de la aplicación y manejo de teclas. No dibuja nada.
 
+use crate::i18n::{fill, Lang, Texts};
 use bindanalyzer_core::model::{Bind, ModMask};
 use bindanalyzer_core::query::{self, Conflict, SearchField};
 use bindanalyzer_core::{load, LoadOptions, Snapshot};
@@ -8,8 +9,9 @@ use ratatui::widgets::{ListState, TableState};
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant, SystemTime};
 
-/// Nombre del pseudo-tag que agrupa los binds sin `#TAGS:`.
-pub const UNTAGGED: &str = "(sin tag)";
+/// Identificador interno del pseudo-tag que agrupa los binds sin `#TAGS:`.
+/// Se muestra traducido con `Texts::untagged`.
+pub const UNTAGGED: &str = "\u{1}untagged";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum View {
@@ -21,13 +23,13 @@ pub enum View {
 }
 
 impl View {
-    pub fn title(self) -> &'static str {
+    pub fn title(self, t: &Texts) -> &'static str {
         match self {
-            View::Cheatsheet => "Chuleta",
-            View::Search => "Buscar",
-            View::FreeKeys => "Teclas libres",
-            View::FreeCombos => "Combos libres",
-            View::Conflicts => "Conflictos",
+            View::Cheatsheet => t.view_cheatsheet,
+            View::Search => t.view_search,
+            View::FreeKeys => t.view_free_keys,
+            View::FreeCombos => t.view_free_combos,
+            View::Conflicts => t.view_conflicts,
         }
     }
 }
@@ -45,6 +47,7 @@ pub struct TagState {
 }
 
 pub struct App {
+    pub t: &'static Texts,
     pub opts: LoadOptions,
     pub snap: Snapshot,
     pub view: View,
@@ -77,9 +80,10 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(opts: LoadOptions, snap: Snapshot, compact: bool, view: View) -> App {
+    pub fn new(opts: LoadOptions, snap: Snapshot, compact: bool, view: View, lang: Lang) -> App {
         let mtime = snap.latest_mtime();
         let mut app = App {
+            t: lang.texts(),
             opts,
             snap,
             view: View::Cheatsheet,
@@ -237,9 +241,9 @@ impl App {
                 self.snap = s;
                 self.mtime = self.snap.latest_mtime();
                 self.rebuild();
-                self.status = "Recargado".to_string();
+                self.status = self.t.status_reloaded.to_string();
             }
-            Err(e) => self.status = format!("Error al recargar: {e}"),
+            Err(e) => self.status = fill(self.t.status_reload_error, &[&e]),
         }
     }
 
@@ -252,7 +256,7 @@ impl App {
         let m = self.snap.latest_mtime();
         if m != self.mtime {
             self.reload();
-            self.status = "Config modificada, recargado".to_string();
+            self.status = self.t.status_file_changed.to_string();
         }
     }
 

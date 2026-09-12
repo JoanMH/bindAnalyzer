@@ -23,7 +23,7 @@ pub struct ParsedConfig {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ConfigError {
-    #[error("no se puede leer {0}: {1}")]
+    #[error("cannot read {0}: {1}")]
     Read(PathBuf, std::io::Error),
 }
 
@@ -149,7 +149,7 @@ impl Parser {
 
     fn handle_source(&mut self, value: &str, from: &Path, line: usize, depth: usize) {
         if depth >= MAX_SOURCE_DEPTH {
-            self.warn(from, line, "demasiados niveles de source anidados");
+            self.warn(from, line, "too many nested source levels");
             return;
         }
         let expanded = expand_home(value);
@@ -164,7 +164,7 @@ impl Parser {
             match glob::glob(&pattern) {
                 Ok(it) => it.filter_map(Result::ok).collect(),
                 Err(e) => {
-                    self.warn(from, line, format!("patrón de source no válido: {e}"));
+                    self.warn(from, line, format!("invalid source pattern: {e}"));
                     return;
                 }
             }
@@ -173,7 +173,7 @@ impl Parser {
         };
 
         if paths.is_empty() {
-            self.warn(from, line, format!("source sin coincidencias: {value}"));
+            self.warn(from, line, format!("source matches nothing: {value}"));
         }
         for p in paths {
             match std::fs::read_to_string(&p) {
@@ -182,7 +182,7 @@ impl Parser {
                     self.parse_text(&p, &text, depth + 1);
                     self.tags = saved_tags;
                 }
-                Err(e) => self.warn(from, line, format!("no se puede leer {}: {e}", p.display())),
+                Err(e) => self.warn(from, line, format!("cannot read {}: {e}", p.display())),
             }
         }
     }
@@ -191,13 +191,13 @@ impl Parser {
         let (flags, unknown_flags) = BindFlags::from_letters(&k[4..]);
         if !unknown_flags.is_empty() {
             let letters: String = unknown_flags.iter().collect();
-            self.warn(path, line, format!("flags de bind desconocidos: {letters}"));
+            self.warn(path, line, format!("unknown bind flags: {letters}"));
         }
 
         let nparts = if flags.description { 5 } else { 4 };
         let parts: Vec<&str> = value.splitn(nparts, ',').map(str::trim).collect();
         if parts.len() < nparts - 1 {
-            self.warn(path, line, "bind incompleto, faltan campos");
+            self.warn(path, line, "incomplete bind, missing fields");
             return;
         }
         let (mods_s, key_s, desc, dispatcher, arg) = if flags.description {
@@ -211,11 +211,11 @@ impl Parser {
             self.warn(
                 path,
                 line,
-                format!("modificadores desconocidos: {}", unknown_mods.join(" ")),
+                format!("unknown modifiers: {}", unknown_mods.join(" ")),
             );
         }
         if dispatcher.is_empty() {
-            self.warn(path, line, "bind sin dispatcher");
+            self.warn(path, line, "bind without dispatcher");
         }
 
         self.out.binds.push(Bind {

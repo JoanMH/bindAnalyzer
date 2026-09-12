@@ -31,9 +31,9 @@ impl SearchField {
 
     pub fn label(self) -> &'static str {
         match self {
-            SearchField::All => "todo",
-            SearchField::App => "aplicación",
-            SearchField::Key => "tecla",
+            SearchField::All => "all",
+            SearchField::App => "app",
+            SearchField::Key => "key",
         }
     }
 }
@@ -166,34 +166,34 @@ pub struct KeyGroup {
 
 pub const KEY_GROUPS: &[KeyGroup] = &[
     KeyGroup {
-        name: "Letras",
+        name: "Letters",
         keys: &[
             "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
             "r", "s", "t", "u", "v", "w", "x", "y", "z",
         ],
     },
     KeyGroup {
-        name: "Números",
+        name: "Digits",
         keys: &["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
     },
     KeyGroup {
-        name: "Función",
+        name: "Function",
         keys: &[
             "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
         ],
     },
     KeyGroup {
-        name: "Navegación",
+        name: "Navigation",
         keys: &[
             "up", "down", "left", "right", "Home", "End", "Prior", "Next", "Insert", "Delete",
         ],
     },
     KeyGroup {
-        name: "Especiales",
+        name: "Special",
         keys: &["Return", "space", "Tab", "Escape", "BackSpace", "Print"],
     },
     KeyGroup {
-        name: "Símbolos",
+        name: "Symbols",
         keys: &[
             "grave",
             "minus",

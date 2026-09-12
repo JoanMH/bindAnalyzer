@@ -1,32 +1,33 @@
 # bindanalyzer
 
-Chuleta y analizador de atajos de teclado de Hyprland para el terminal.
-Escrito en Rust. Sustituye a la versión anterior en C++/Qt, que sigue
-disponible en el historial de git.
+Cheatsheet and analyzer for Hyprland key binds, in the terminal. Written in Rust.
 
-Pensado para vivir en un *special workspace*: se abre una vez, se queda en
-segundo plano y se recarga solo cuando cambia la configuración.
+Meant to live in a Hyprland *special workspace*: start it once, keep it in the
+background, and it reloads itself whenever your configuration changes.
 
-## Qué hace
+[Versión en castellano](README.es.md)
 
-- Lee `hyprland.conf` y todos sus `source =`, resolviendo `$variables`,
-  comentarios, `submap`, `bind`, `bindm`, `binde`, `bindd`... y los `#TAGS:`.
-- Consulta `hyprctl binds -j` para saber qué tiene cargado Hyprland de verdad,
-  y avisa de los binds del fichero que no están cargados (amarillo) o de los
-  cargados que no están en el fichero (gris).
-- Vistas:
-  - **Chuleta**: tabla filtrable por tags.
-  - **Buscar** (`/`): por texto, por aplicación o por combinación (`super shift t`).
-  - **Teclas libres** (`f`): qué teclas quedan libres para cada combinación de modificadores.
-  - **Combos libres** (`l`): para una tecla dada, qué combinaciones están libres.
-  - **Conflictos** (`c`): combinaciones repetidas en el mismo submap.
-- `--json` vuelca todo para scripts, wofi, rofi, etc.
+## What it does
+
+- Reads `hyprland.conf` and every file it `source`s, resolving `$variables`,
+  comments, `submap`, `bind`, `bindm`, `binde`, `bindd`... and `#TAGS:` markers.
+- Queries `hyprctl binds -j` to know what Hyprland has actually loaded, and
+  flags binds that are in the file but not loaded (yellow) or loaded but not in
+  the file (gray).
+- Views:
+  - **Cheatsheet**: table filterable by tags.
+  - **Search** (`/`): by text, by application, or by key combination (`super shift t`).
+  - **Free keys** (`f`): which keys are still free for each modifier combination.
+  - **Free combos** (`l`): for a given key, which modifier combinations are free.
+  - **Conflicts** (`c`): repeated combinations in the same submap.
+- `--json` dumps everything for scripts, wofi, rofi, etc.
+- Interface in English or Spanish (`--lang`, or automatic from `LANG`).
 
 ## Tags
 
-Añade comentarios en tu `hyprland.conf`. Los binds que siguen a una línea
-`#TAGS:` heredan esos tags hasta la siguiente. Una línea `#TAGS:` vacía los
-limpia. Los binds sin tag aparecen bajo `(sin tag)`.
+Add comments to your `hyprland.conf`. Binds following a `#TAGS:` line inherit
+those tags until the next one. An empty `#TAGS:` line clears them. Binds
+without tags show up under `(untagged)`.
 
 ```
 #TAGS: apps main
@@ -38,26 +39,27 @@ bind = $mainMod, 1, workspace, 1
 #TAGS:
 ```
 
-## Compilar e instalar
+## Build and install
 
 ```
 cargo build --release
 install -Dm755 target/release/bindanalyzer ~/.local/bin/bindanalyzer
 ```
 
-## Uso
+## Usage
 
 ```
-bindanalyzer                      # chuleta con hyprctl
-bindanalyzer --compact            # menos columnas
-bindanalyzer --view search        # arrancar buscando
-bindanalyzer --no-live            # solo el fichero, sin hyprctl
-bindanalyzer -c otra.conf --json  # volcado JSON de otro fichero
+bindanalyzer                      # cheatsheet with hyprctl
+bindanalyzer --compact            # fewer columns
+bindanalyzer --view search        # start searching
+bindanalyzer --no-live            # file only, no hyprctl
+bindanalyzer --lang es            # Spanish interface
+bindanalyzer -c other.conf --json # JSON dump of another file
 ```
 
-Ejemplo para tenerlo como chuleta en un special workspace de Hyprland.
-`foot -a` fija la clase de la ventana, y la windowrule la manda al workspace
-especial nada más aparecer. El segundo bind relanza la chuleta si la cierras con `q`.
+Example setup as a cheatsheet in a Hyprland special workspace. `foot -a` sets
+the window class, and the windowrule sends it to the special workspace as soon
+as it appears. The second bind relaunches the cheatsheet if you close it with `q`.
 
 ```
 exec-once = foot -a bindanalyzer -T bindanalyzer -e bindanalyzer --compact
@@ -67,38 +69,38 @@ bind = $mainMod, U, togglespecialworkspace, bindanalyzer
 bind = $mainMod CTRL, U, exec, foot -a bindanalyzer -T bindanalyzer -e bindanalyzer --compact
 ```
 
-Al recargar la configuración con `hyprctl reload` el `exec-once` no se vuelve a
-ejecutar; lanza el comando una vez a mano o usa el bind de relanzar.
+`hyprctl reload` does not run `exec-once` again; launch the command once by
+hand or use the relaunch bind.
 
-### Teclas
+### Keys
 
-| Tecla | Acción |
+| Key | Action |
 |---|---|
-| `/` | buscar; `Tab` cambia el campo (todo, aplicación, tecla); `Esc` o `Enter` sale del cuadro |
-| `f` | teclas libres; `←/→` o `n/p` cambia la combinación; `s` cambia de submap |
-| `l` | combos libres para una tecla |
-| `c` | conflictos |
-| `1` / `Esc` | volver a la chuleta |
-| `t` / `Tab` | panel de tags: `espacio` alterna, `a` todos, `n` ninguno, `o` solo este |
-| `T` | mostrar u ocultar el panel de tags |
-| `m` | modo compacto |
-| `j/k`, `↑/↓`, `g/G`, `PgUp/PgDn` | moverse |
-| `Enter` | detalle del bind (línea original, fichero, flags, estado) |
-| `r` | recargar (también automático al cambiar el fichero) |
-| `?` | ayuda |
-| `q` | salir |
+| `/` | search; `Tab` switches the field (all, app, key); `Esc` or `Enter` leaves the input |
+| `f` | free keys; `←/→` or `n/p` changes the combination; `s` changes submap |
+| `l` | free combos for a key |
+| `c` | conflicts |
+| `1` / `Esc` | back to the cheatsheet |
+| `t` / `Tab` | tags panel: `space` toggles, `a` all, `n` none, `o` only this one |
+| `T` | show or hide the tags panel |
+| `m` | compact mode |
+| `j/k`, `↑/↓`, `g/G`, `PgUp/PgDn` | move |
+| `Enter` | bind detail (original line, file, flags, state) |
+| `r` | reload (also automatic when the file changes) |
+| `?` | help |
+| `q` | quit |
 
-## Estructura
+## Layout
 
-- `crates/core`: modelo, parser de la config, lectura de `hyprctl`, fusión y consultas. Sin dependencias de interfaz.
-- `crates/tui`: la interfaz con ratatui y el binario `bindanalyzer`.
+- `crates/core`: model, config parser, `hyprctl` reader, merge and queries. No UI dependencies.
+- `crates/tui`: the ratatui interface and the `bindanalyzer` binary.
 
-Tests: `cargo test`. Para ver las vistas renderizadas con tu config real:
+Tests: `cargo test`. To see the views rendered with your real config:
 
 ```
 BINDANALYZER_CONFIG=~/.config/hypr/hyprland.conf cargo test -p bindanalyzer -- --ignored --nocapture real_config_frames
 ```
 
-## Licencia
+## License
 
-GPL-3.0-or-later. Úsalo bajo tu propia responsabilidad.
+GPL-3.0-or-later. Use at your own risk.

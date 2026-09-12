@@ -1,10 +1,12 @@
 //! `bindanalyzer`: chuleta y analizador de atajos de Hyprland en el terminal.
 
 mod app;
+mod i18n;
 mod ui;
 
 use anyhow::{Context, Result};
 use app::{App, View};
+use i18n::Lang;
 use bindanalyzer_core::{default_config_path, load, LoadOptions, Snapshot};
 use clap::{Parser, ValueEnum};
 use crossterm::event::{self, Event, KeyEventKind};
@@ -36,28 +38,32 @@ impl From<StartView> for View {
 #[command(
     name = "bindanalyzer",
     version,
-    about = "Chuleta y analizador de atajos de teclado de Hyprland"
+    about = "Cheatsheet and analyzer for Hyprland key binds"
 )]
 struct Args {
-    /// Fichero de configuración (por defecto ~/.config/hypr/hyprland.conf)
+    /// Config file (default: ~/.config/hypr/hyprland.conf)
     #[arg(short, long)]
     config: Option<PathBuf>,
 
-    /// No consultar `hyprctl binds -j`, usar solo el fichero
+    /// Do not query `hyprctl binds -j`, use the file only
     #[arg(long)]
     no_live: bool,
 
-    /// Arrancar en modo compacto (menos columnas)
+    /// Start in compact mode (fewer columns)
     #[arg(long)]
     compact: bool,
 
-    /// Vista inicial
+    /// Initial view
     #[arg(long, value_enum, default_value_t = StartView::Cheatsheet)]
     view: StartView,
 
-    /// Volcar los binds en JSON y salir (para scripts, wofi, rofi...)
+    /// Dump the binds as JSON and exit (for scripts, wofi, rofi...)
     #[arg(long)]
     json: bool,
+
+    /// Interface language (default: from LANG, English unless it starts with "es")
+    #[arg(long, value_enum)]
+    lang: Option<Lang>,
 }
 
 fn main() -> Result<()> {
@@ -66,14 +72,15 @@ fn main() -> Result<()> {
         config: args.config.unwrap_or_else(default_config_path),
         use_live: !args.no_live,
     };
-    let snap = load(&opts).with_context(|| "no se pudo cargar la configuración")?;
+    let snap = load(&opts).with_context(|| "could not load the configuration")?;
 
     if args.json {
         println!("{}", serde_json::to_string_pretty(&to_json(&snap))?);
         return Ok(());
     }
 
-    let mut app = App::new(opts, snap, args.compact, args.view.into());
+    let lang = args.lang.unwrap_or_else(Lang::from_env);
+    let mut app = App::new(opts, snap, args.compact, args.view.into(), lang);
     let mut terminal = ratatui::init();
     let result = run(&mut terminal, &mut app);
     ratatui::restore();
