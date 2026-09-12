@@ -101,6 +101,10 @@ Tests: `cargo test`. To see the views rendered with your real config:
 BINDANALYZER_CONFIG=~/.config/hypr/hyprland.conf cargo test -p bindanalyzer -- --ignored --nocapture real_config_frames
 ```
 
+## Credits
+
+This code was written with Claude Fable 5.1, Anthropic's AI model, working alongside the author.
+
 ## License
 
 GPL-3.0-or-later. Use at your own risk.
