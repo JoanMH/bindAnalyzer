@@ -2,8 +2,9 @@
 //!
 //! Dos fuentes de datos se combinan en un [`Snapshot`]:
 //!
-//! - el fichero de configuración (`hyprland.conf` y sus `source =`), que aporta
-//!   los `#TAGS:`, la línea original y su posición;
+//! - el fichero de configuración (`hyprland.lua` y sus `require`, o el antiguo
+//!   `hyprland.conf` y sus `source =`), que aporta los tags, la acción, la
+//!   línea original y su posición;
 //! - `hyprctl binds -j`, que es la verdad sobre lo que Hyprland tiene cargado.
 //!
 //! Sobre el snapshot se ejecutan las consultas de [`query`]: búsqueda, teclas
@@ -11,6 +12,7 @@
 
 pub mod config;
 pub mod hyprctl;
+pub mod lua;
 pub mod model;
 pub mod query;
 pub mod snapshot;

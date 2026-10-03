@@ -156,6 +156,7 @@ impl Key {
     /// Texto para mostrar: `Return [36]` para keycodes conocidos.
     pub fn display(&self) -> String {
         match self {
+            Key::Sym(s) if s.is_empty() => "?".to_string(),
             Key::Sym(s) => s.clone(),
             Key::Code(c) => match keycode_to_sym(*c) {
                 Some(n) => format!("{n} [{c}]"),

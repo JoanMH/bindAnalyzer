@@ -9,11 +9,19 @@ background, and it reloads itself whenever your configuration changes.
 
 ## What it does
 
-- Reads `hyprland.conf` and every file it `source`s, resolving `$variables`,
-  comments, `submap`, `bind`, `bindm`, `binde`, `bindd`... and `#TAGS:` markers.
+- Reads `hyprland.lua` (Hyprland 0.55+) by running it in an embedded Lua
+  interpreter with a fake `hl` table, so variables, loops, `require`,
+  `hl.define_submap` and bind options all resolve exactly as Hyprland sees them.
+  `hl.dsp.*` dispatchers are rendered as readable actions (`exec firefox`,
+  `window.close`, `focus workspace=3`); plain Lua functions show as `lua function`,
+  or as their `description` option if given.
+- Still reads the legacy `hyprland.conf` and every file it `source`s, resolving
+  `$variables`, comments, `submap`, `bind`, `bindm`, `binde`, `bindd`...
+  `hyprland.lua` wins when both exist, as in Hyprland; `-c file` picks by extension.
 - Queries `hyprctl binds -j` to know what Hyprland has actually loaded, and
   flags binds that are in the file but not loaded (yellow) or loaded but not in
-  the file (gray).
+  the file (gray). With a Lua config Hyprland only reports `__lua` callbacks,
+  so the action text always comes from the file.
 - Views:
   - **Cheatsheet**: table filterable by tags.
   - **Search** (`/`): by text, by application, or by key combination (`super shift t`).
@@ -25,21 +33,39 @@ background, and it reloads itself whenever your configuration changes.
 
 ## Tags
 
-Add comments to your `hyprland.conf`. Binds following a `#TAGS:` line inherit
-those tags until the next one. An empty `#TAGS:` line clears them. Binds
-without tags show up under `(untagged)`.
+Add comments to your config. Binds following a `TAGS:` comment inherit those
+tags until the next one. An empty `TAGS:` comment clears them. Binds without
+tags show up under `(untagged)`. Files loaded with `require` or `source` keep
+their own tags.
+
+```lua
+--TAGS: apps main
+hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd("firefox"))
+hl.bind(mainMod .. " + F2", hl.dsp.exec_cmd("thunderbird"))
+
+--TAGS: workspaces
+for i = 1, 9 do
+  hl.bind(mainMod .. " + " .. i, hl.dsp.focus({ workspace = tostring(i) }))
+end
+--TAGS:
+```
+
+In the legacy format the marker is `#TAGS:`:
 
 ```
 #TAGS: apps main
 bind = $mainMod, F1, exec, firefox
-bind = $mainMod, F2, exec, thunderbird
-
-#TAGS: workspaces
-bind = $mainMod, 1, workspace, 1
 #TAGS:
 ```
 
+Note on keycode binds (`code:36`): Hyprland 0.56 registers them from a Lua
+config with an empty key, so `hyprctl` cannot report them. bindanalyzer pairs
+them with the file by registration order and adds a warning; prefer keysym
+names (`Return`, `space`, `XF86AudioMute`...) in Lua configs.
+
 ## Build and install
+
+Needs a C compiler for the embedded Lua (gcc or clang).
 
 ```
 cargo build --release

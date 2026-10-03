@@ -1,8 +1,9 @@
 //! Carga y fusión de las dos fuentes: fichero de configuración y `hyprctl`.
 
 use crate::config::{self, ConfigError, ParsedConfig};
+use crate::lua;
 use crate::hyprctl::{self, LiveError};
-use crate::model::{Bind, BindId, Origin};
+use crate::model::{Bind, BindId, Key, Origin};
 use serde::Serialize;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -24,13 +25,29 @@ impl Default for LoadOptions {
     }
 }
 
-/// `$XDG_CONFIG_HOME/hypr/hyprland.conf` o `~/.config/hypr/hyprland.conf`.
+/// `hyprland.lua` si existe, si no `hyprland.conf`, bajo `$XDG_CONFIG_HOME/hypr`
+/// o `~/.config/hypr`. Es el mismo orden que sigue Hyprland.
 pub fn default_config_path() -> PathBuf {
     let base = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))
         .unwrap_or_else(|| PathBuf::from("."));
-    base.join("hypr").join("hyprland.conf")
+    let dir = base.join("hypr");
+    let lua = dir.join("hyprland.lua");
+    if lua.exists() {
+        lua
+    } else {
+        dir.join("hyprland.conf")
+    }
+}
+
+/// Lee el fichero con el parser que corresponde a su extensión.
+pub fn parse_any(path: &Path) -> Result<ParsedConfig, ConfigError> {
+    if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("lua")) {
+        lua::parse_lua(path)
+    } else {
+        config::parse_config(path)
+    }
 }
 
 /// Estado de la consulta a `hyprctl`.
@@ -98,7 +115,7 @@ impl Snapshot {
 
 /// Lee la configuración y, si procede, `hyprctl`, y fusiona ambas.
 pub fn load(opts: &LoadOptions) -> Result<Snapshot, ConfigError> {
-    let parsed = config::parse_config(&opts.config)?;
+    let parsed = parse_any(&opts.config)?;
     let live = if opts.use_live {
         Some(hyprctl::live_binds())
     } else {
@@ -124,7 +141,7 @@ pub fn build(
             LiveStatus::Error(e.to_string())
         }
         Some(Ok(live_binds)) => {
-            merge(&mut binds, live_binds);
+            merge(&mut binds, live_binds, &mut warnings);
             LiveStatus::Ok
         }
     };
@@ -141,7 +158,13 @@ pub fn build(
 /// Empareja cada bind del fichero con uno de `hyprctl` por identidad.
 /// Los del fichero sin pareja quedan como `Config`; los de `hyprctl` sin pareja
 /// se añaden al final como `Live`.
-fn merge(binds: &mut Vec<Bind>, live: Vec<Bind>) {
+///
+/// Segunda pasada: con configuración Lua, Hyprland registra los binds por
+/// keycode (`code:NN`) con la tecla vacía. Como `hyprctl` lista los binds en
+/// orden de registro, igual que el fichero, los sobrantes de `hyprctl` sin
+/// tecla se emparejan en orden con los sobrantes del fichero que tengan el
+/// mismo submap y modificadores, y se deja un aviso.
+fn merge(binds: &mut Vec<Bind>, live: Vec<Bind>, warnings: &mut Vec<String>) {
     let mut pool: HashMap<BindId, Vec<Bind>> = HashMap::new();
     for l in live {
         pool.entry(l.id()).or_default().push(l);
@@ -158,7 +181,34 @@ fn merge(binds: &mut Vec<Bind>, live: Vec<Bind>) {
     }
     let mut rest: Vec<Bind> = pool.into_values().flatten().collect();
     rest.sort_by_key(|a| a.id());
-    binds.extend(rest);
+
+    let mut keyless: Vec<Bind> = Vec::new();
+    for l in rest.drain(..) {
+        if l.key == Key::Sym(String::new()) {
+            keyless.push(l);
+        } else {
+            binds.push(l);
+        }
+    }
+    for b in binds.iter_mut().filter(|b| b.origin == Origin::Config) {
+        let Some(pos) = keyless
+            .iter()
+            .position(|l| l.submap == b.submap && l.mods == b.mods)
+        else {
+            continue;
+        };
+        let l = keyless.remove(pos);
+        b.origin = Origin::Both;
+        if b.description.is_empty() {
+            b.description = l.description;
+        }
+        warnings.push(format!(
+            "{}: Hyprland reports this bind ({}) without a key; keycode binds may not work with the Lua config",
+            b.location(),
+            b.combo()
+        ));
+    }
+    binds.extend(keyless);
 }
 
 #[cfg(test)]
@@ -189,6 +239,30 @@ mod tests {
         assert_eq!(s.live_only_count(), 1);
         assert_eq!(s.all_tags(), vec!["a"]);
         assert!(s.has_untagged());
+    }
+
+    #[test]
+    fn keyless_live_binds_pair_in_order_with_a_warning() {
+        let parsed = config::parse_str(
+            "bind = SUPER, 36, exec, foot\nbind = , 122, exec, vol-\nbind = , 123, exec, vol+\nbind = SUPER, Q, killactive,\n",
+            Path::new("x.conf"),
+        );
+        let live = parse_live_json(
+            br#"[{"modmask":64,"key":"","dispatcher":"__lua","arg":"1"},
+                 {"modmask":0,"key":"","dispatcher":"__lua","arg":"3"},
+                 {"modmask":0,"key":"","dispatcher":"__lua","arg":"5"},
+                 {"modmask":64,"key":"Q","dispatcher":"__lua","arg":"7"},
+                 {"modmask":8,"key":"","dispatcher":"__lua","arg":"9"}]"#,
+        )
+        .unwrap();
+        let s = build(Path::new("x.conf"), parsed, Some(Ok(live)));
+        assert_eq!(s.binds.len(), 5);
+        assert!(s.binds[..4].iter().all(|b| b.origin == Origin::Both), "{:?}", s.binds);
+        assert_eq!(s.binds[1].action(), "exec vol-");
+        assert_eq!(s.binds[4].origin, Origin::Live);
+        assert_eq!(s.binds[4].action(), "lua callback #9");
+        assert_eq!(s.warnings.len(), 3, "{:?}", s.warnings);
+        assert!(s.warnings[0].contains("SUPER+Return [36]"));
     }
 
     #[test]

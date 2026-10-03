@@ -73,11 +73,18 @@ fn convert(r: RawBind) -> Bind {
     } else {
         Key::Sym(r.key)
     };
+    // Con configuración Lua, Hyprland solo informa de que el bind llama a un
+    // callback; la acción real la aporta el fichero.
+    let (dispatcher, arg) = if r.dispatcher == "__lua" {
+        ("lua".to_string(), format!("callback #{}", r.arg))
+    } else {
+        (r.dispatcher, r.arg)
+    };
     Bind {
         mods: ModMask(r.modmask),
         key,
-        dispatcher: r.dispatcher,
-        arg: r.arg,
+        dispatcher,
+        arg,
         submap: r.submap,
         flags: BindFlags {
             locked: r.locked,

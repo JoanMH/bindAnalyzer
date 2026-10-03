@@ -9,11 +9,20 @@ queda en segundo plano y se recarga solo cuando cambia la configuración.
 
 ## Qué hace
 
-- Lee `hyprland.conf` y todos sus `source =`, resolviendo `$variables`,
-  comentarios, `submap`, `bind`, `bindm`, `binde`, `bindd`... y los `#TAGS:`.
+- Lee `hyprland.lua` (Hyprland 0.55+) ejecutándolo en un intérprete Lua
+  embebido con una tabla `hl` falsa, así que variables, bucles, `require`,
+  `hl.define_submap` y opciones de bind se resuelven exactamente como los ve
+  Hyprland. Los dispatchers `hl.dsp.*` se muestran como acciones legibles
+  (`exec firefox`, `window.close`, `focus workspace=3`); las funciones Lua
+  salen como `lua function`, o con su opción `description` si la tienen.
+- Sigue leyendo el `hyprland.conf` antiguo y todos sus `source =`, resolviendo
+  `$variables`, comentarios, `submap`, `bind`, `bindm`, `binde`, `bindd`...
+  Si existen los dos, gana `hyprland.lua`, como en Hyprland; con `-c fichero`
+  se elige por la extensión.
 - Consulta `hyprctl binds -j` para saber qué tiene cargado Hyprland de verdad,
   y avisa de los binds del fichero que no están cargados (amarillo) o de los
-  cargados que no están en el fichero (gris).
+  cargados que no están en el fichero (gris). Con config Lua, Hyprland solo
+  informa de callbacks `__lua`, así que el texto de la acción sale siempre del fichero.
 - Vistas:
   - **Chuleta**: tabla filtrable por tags.
   - **Buscar** (`/`): por texto, por aplicación o por combinación (`super shift t`).
@@ -25,21 +34,40 @@ queda en segundo plano y se recarga solo cuando cambia la configuración.
 
 ## Tags
 
-Añade comentarios en tu `hyprland.conf`. Los binds que siguen a una línea
-`#TAGS:` heredan esos tags hasta la siguiente. Una línea `#TAGS:` vacía los
-limpia. Los binds sin tag aparecen bajo `(sin tag)`.
+Añade comentarios en tu config. Los binds que siguen a un comentario `TAGS:`
+heredan esos tags hasta el siguiente. Un comentario `TAGS:` vacío los limpia.
+Los binds sin tag aparecen bajo `(sin tag)`. Los ficheros cargados con
+`require` o `source` tienen sus propios tags.
+
+```lua
+--TAGS: apps main
+hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd("firefox"))
+hl.bind(mainMod .. " + F2", hl.dsp.exec_cmd("thunderbird"))
+
+--TAGS: workspaces
+for i = 1, 9 do
+  hl.bind(mainMod .. " + " .. i, hl.dsp.focus({ workspace = tostring(i) }))
+end
+--TAGS:
+```
+
+En el formato antiguo la marca es `#TAGS:`:
 
 ```
 #TAGS: apps main
 bind = $mainMod, F1, exec, firefox
-bind = $mainMod, F2, exec, thunderbird
-
-#TAGS: workspaces
-bind = $mainMod, 1, workspace, 1
 #TAGS:
 ```
 
+Nota sobre binds por keycode (`code:36`): Hyprland 0.56 los registra desde
+una config Lua con la tecla vacía y `hyprctl` no puede informar de ellos.
+bindanalyzer los empareja con el fichero por orden de registro y añade un
+aviso; en configs Lua es preferible usar nombres de keysym (`Return`, `space`,
+`XF86AudioMute`...).
+
 ## Compilar e instalar
+
+Necesita un compilador de C para el Lua embebido (gcc o clang).
 
 ```
 cargo build --release
