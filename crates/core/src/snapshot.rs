@@ -141,7 +141,7 @@ pub fn build(
             LiveStatus::Error(e.to_string())
         }
         Some(Ok(live_binds)) => {
-            merge(&mut binds, live_binds, &mut warnings);
+            merge(&mut binds, live_binds);
             LiveStatus::Ok
         }
     };
@@ -159,12 +159,12 @@ pub fn build(
 /// Los del fichero sin pareja quedan como `Config`; los de `hyprctl` sin pareja
 /// se añaden al final como `Live`.
 ///
-/// Segunda pasada: con configuración Lua, Hyprland registra los binds por
-/// keycode (`code:NN`) con la tecla vacía. Como `hyprctl` lista los binds en
-/// orden de registro, igual que el fichero, los sobrantes de `hyprctl` sin
-/// tecla se emparejan en orden con los sobrantes del fichero que tengan el
-/// mismo submap y modificadores, y se deja un aviso.
-fn merge(binds: &mut Vec<Bind>, live: Vec<Bind>, warnings: &mut Vec<String>) {
+/// Segunda pasada: con configuración Lua, `hyprctl` informa de los binds por
+/// keycode (`code:NN`) con la tecla vacía aunque funcionan. Como lista los
+/// binds en orden de registro, igual que el fichero, los sobrantes de
+/// `hyprctl` sin tecla se emparejan en orden con los sobrantes del fichero
+/// que tengan el mismo submap y modificadores.
+fn merge(binds: &mut Vec<Bind>, live: Vec<Bind>) {
     let mut pool: HashMap<BindId, Vec<Bind>> = HashMap::new();
     for l in live {
         pool.entry(l.id()).or_default().push(l);
@@ -202,11 +202,6 @@ fn merge(binds: &mut Vec<Bind>, live: Vec<Bind>, warnings: &mut Vec<String>) {
         if b.description.is_empty() {
             b.description = l.description;
         }
-        warnings.push(format!(
-            "{}: Hyprland reports this bind ({}) without a key; keycode binds may not work with the Lua config",
-            b.location(),
-            b.combo()
-        ));
     }
     binds.extend(keyless);
 }
@@ -242,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    fn keyless_live_binds_pair_in_order_with_a_warning() {
+    fn keyless_live_binds_pair_in_order() {
         let parsed = config::parse_str(
             "bind = SUPER, 36, exec, foot\nbind = , 122, exec, vol-\nbind = , 123, exec, vol+\nbind = SUPER, Q, killactive,\n",
             Path::new("x.conf"),
@@ -261,8 +256,7 @@ mod tests {
         assert_eq!(s.binds[1].action(), "exec vol-");
         assert_eq!(s.binds[4].origin, Origin::Live);
         assert_eq!(s.binds[4].action(), "lua callback #9");
-        assert_eq!(s.warnings.len(), 3, "{:?}", s.warnings);
-        assert!(s.warnings[0].contains("SUPER+Return [36]"));
+        assert!(s.warnings.is_empty(), "{:?}", s.warnings);
     }
 
     #[test]

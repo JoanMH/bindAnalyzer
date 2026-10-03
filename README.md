@@ -58,10 +58,9 @@ bind = $mainMod, F1, exec, firefox
 #TAGS:
 ```
 
-Note on keycode binds (`code:36`): Hyprland 0.56 registers them from a Lua
-config with an empty key, so `hyprctl` cannot report them. bindanalyzer pairs
-them with the file by registration order and adds a warning; prefer keysym
-names (`Return`, `space`, `XF86AudioMute`...) in Lua configs.
+Note on keycode binds (`code:36`): with a Lua config, Hyprland 0.56 reports
+them through `hyprctl` with an empty key, although they work. bindanalyzer
+pairs them with the file by registration order.
 
 ## Build and install
 
