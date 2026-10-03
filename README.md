@@ -73,14 +73,55 @@ Note on keycode binds (`code:36`): with a Lua config, Hyprland 0.56 reports
 them through `hyprctl` with an empty key, although they work. bindanalyzer
 pairs them with the file by registration order.
 
-## Build and install
+## Install from scratch
 
-Needs a C compiler for the embedded Lua (gcc or clang).
+Requirements: Rust (stable) and a C compiler for the embedded Lua.
+
+On Arch Linux:
 
 ```
+sudo pacman -S --needed rustup base-devel git
+rustup default stable
+```
+
+On Debian or Ubuntu:
+
+```
+sudo apt install build-essential git curl
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Then clone, build and install the binary into `~/.local/bin` (make sure it is
+in your `PATH`):
+
+```
+git clone https://github.com/JoanMH/BindAnalyzer
+cd BindAnalyzer
 cargo build --release
 install -Dm755 target/release/bindanalyzer ~/.local/bin/bindanalyzer
 ```
+
+The first build compiles about 90 crates plus Lua and takes well under a
+minute on a modern machine. Check it works with:
+
+```
+bindanalyzer --version
+bindanalyzer --json | head
+```
+
+## Update
+
+Same commands from the repository directory. Only what changed is rebuilt,
+so it takes a few seconds:
+
+```
+git pull
+cargo build --release
+install -Dm755 target/release/bindanalyzer ~/.local/bin/bindanalyzer
+```
+
+A running cheatsheet keeps the old binary in memory: quit it with `q` and
+launch it again.
 
 ## Usage
 
