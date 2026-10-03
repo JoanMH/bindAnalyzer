@@ -7,6 +7,17 @@ background, and it reloads itself whenever your configuration changes.
 
 [Versión en castellano](README.es.md)
 
+## Supported configurations
+
+| Hyprland | Config file | Support |
+|---|---|---|
+| 0.55 and later | `hyprland.lua` | Yes. Executed in an embedded Lua interpreter, see below. |
+| any | `hyprland.conf` (hyprlang, deprecated since 0.55) | Yes. Kept for people who have not migrated. |
+
+If both files exist `hyprland.lua` wins, exactly as in Hyprland. `-c file`
+forces a file and picks the parser by extension. The `hyprctl` integration
+works with both.
+
 ## What it does
 
 - Reads `hyprland.lua` (Hyprland 0.55+) by running it in an embedded Lua

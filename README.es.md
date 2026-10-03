@@ -7,6 +7,17 @@ queda en segundo plano y se recarga solo cuando cambia la configuración.
 
 [English version](README.md)
 
+## Configuraciones soportadas
+
+| Hyprland | Fichero de config | Soporte |
+|---|---|---|
+| 0.55 y posteriores | `hyprland.lua` | Sí. Se ejecuta en un intérprete Lua embebido, ver más abajo. |
+| cualquiera | `hyprland.conf` (hyprlang, obsoleto desde 0.55) | Sí. Se mantiene para quien no haya migrado. |
+
+Si existen los dos ficheros gana `hyprland.lua`, exactamente como en Hyprland.
+Con `-c fichero` se fuerza uno y el parser se elige por la extensión. La
+integración con `hyprctl` funciona con ambos.
+
 ## Qué hace
 
 - Lee `hyprland.lua` (Hyprland 0.55+) ejecutándolo en un intérprete Lua
